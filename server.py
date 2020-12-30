@@ -53,7 +53,7 @@ class Server:
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
                                         
-            self.server_socket_udp.sendto(message, ('<broadcast>', 13400))  
+            self.server_socket_udp.sendto(message, ('255.255.255.255', 13400))  
                                      
            
             time.sleep(1)
