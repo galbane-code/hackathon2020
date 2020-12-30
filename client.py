@@ -17,7 +17,7 @@ class Client:
         self.name = name
         self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
         self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       
-        self.udp_port = 13400
+        self.udp_port = 13117
         self.client_buffer_size = 1024
         self.first_connection = True
         self.keep_playing = True
@@ -60,7 +60,7 @@ class Client:
 
             if msg_unpacked[0] == Client.magic_cookie and msg_unpacked[1] == Client.offer:
                 tcp_server_port = msg_unpacked[2]
-                server_ip = "172.1.0.137"
+                server_ip = server_address[0]
                 keep_alive = False
 
                 self.tcp_connection(server_ip, tcp_server_port)

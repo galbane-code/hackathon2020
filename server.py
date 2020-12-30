@@ -46,14 +46,14 @@ class Server:
         packet will contain two verifying msgs and the tcp port number that the server is listening to.
         the server will wait for clients for 10 seconds.
         """
-        finish_time = time.time() + 5
+        finish_time = time.time() + 10
         print(colors.magenta + "Server started, listening on IP address {}".format(socket.gethostbyname(socket.gethostname())))
                 
         
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
                                         
-            self.server_socket_udp.sendto(message, ('255.255.255.255', 13400))  
+            self.server_socket_udp.sendto(message, (socket.gethostbyname(socket.gethostname()), 13117))  
                                      
            
             time.sleep(1)
@@ -79,7 +79,7 @@ class Server:
             
 
         self.server_socket_tcp.listen()
-        self.server_socket_tcp.settimeout(5)
+        # self.server_socket_tcp.settimeout(5)
 
         group = 1
         while not self.game_is_on:
@@ -151,7 +151,7 @@ class Server:
         :param connection_socket:
         :return:
         """
-        end_time = time.time() + 5
+        end_time = time.time() + 10
         connection_socket.settimeout(1)
 
         while time.time() < end_time:
