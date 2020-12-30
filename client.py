@@ -17,7 +17,7 @@ class Client:
         self.name = name
         self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
         self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       
-        self.udp_port = 13117
+        self.udp_port = 13400
         self.client_buffer_size = 1024
         self.first_connection = True
         self.keep_playing = True
@@ -85,7 +85,7 @@ class Client:
             self.show_msg(msg)
             self.play_game()
         except:
-            # print("problem")
+            
             return
 
     def show_msg(self, msg):

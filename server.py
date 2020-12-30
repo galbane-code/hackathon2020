@@ -53,7 +53,7 @@ class Server:
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
                                         
-            self.server_socket_udp.sendto(message, (socket.gethostbyname(socket.gethostname()), 13117))  
+            self.server_socket_udp.sendto(message, ("172.1.255.255", 13400))  
                                      
            
             time.sleep(1)
@@ -79,7 +79,7 @@ class Server:
             
 
         self.server_socket_tcp.listen()
-        # self.server_socket_tcp.settimeout(5)
+        self.server_socket_tcp.settimeout(5)
 
         group = 1
         while not self.game_is_on:
