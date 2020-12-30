@@ -50,7 +50,9 @@ class Server:
         """
         finish_time = time.time() + 2
         print(colors.magenta + "Server started, listening on IP address {}".format(socket.gethostbyname(socket.gethostname())))
+        print("client port is {}".format(self.tcp_port_number))
         self.server_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        
 
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)

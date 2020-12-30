@@ -3,10 +3,9 @@ import socket
 import struct
 import time
 from threading import Thread
-from pynput import keyboard
+import getch
 import colors
-
-# from curtsies import Input
+from curtsies import Input
 # import curses
 
 
@@ -58,7 +57,7 @@ class Client:
 
             if msg_unpacked[0] == Client.magic_cookie and msg_unpacked[1] == Client.offer:
                 tcp_server_port = msg_unpacked[2]
-                server_ip = "169.254.208.174"
+                server_ip = "172.1.0.137"
                 keep_alive = False
 
                 self.tcp_connection(server_ip, tcp_server_port)
@@ -73,12 +72,12 @@ class Client:
         :param tcp_server_port:
         :return:
         """
+        print("client port is {}".format(tcp_server_port))
         print(colors.yellow + "Received offer from {} attempting to connect...​".format(server_ip))
         self.client_socket_tcp.connect((server_ip, tcp_server_port))
 
         self.client_socket_tcp.send(("{}\n".format(self.name)).encode("utf-8"))
         msg = self.client_socket_tcp.recv(self.client_buffer_size)
-
         self.show_msg(msg)
         self.play_game()
 
@@ -117,16 +116,16 @@ class Client:
         :return:
         """
         Thread(target=self.listen).start()
-
+        
         while self.keep_playing:
-            with keyboard.Events() as events:
-                char = events.get(2)
-                try:
-                    char = char.key.char
-                    msg_char = char.encode("utf-8")
-                    self.client_socket_tcp.send(msg_char)
-                except:
-                    continue
+            # with keyboard.Events() as events:
+            #     char = events.get(2)
+            try:
+                with Input(keynames='curtsies') as input_generator: 
+                    for msg_char in input_generator:
+                        self.client_socket_tcp.send(msg_char.encode("utf-8"))
+            except:
+                continue
 
         # with Input(keynames='curtsies') as input_generator: //from Ronit
         #     for msg_char in input_generator:
