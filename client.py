@@ -17,7 +17,7 @@ class Client:
         self.name = name
         self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
         self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       
-        self.udp_port = 13400
+        self.udp_port = 13117
         self.client_buffer_size = 1024
         self.first_connection = True
         self.keep_playing = True
@@ -46,7 +46,7 @@ class Client:
         print(colors.yellow + "Client started, listening for offer requests...")          
         self.first_connection = False
 
-        end = time.time() + 5
+        end = time.time() + 10
         keep_alive = True
         while keep_alive and time.time() < end:
             try:
@@ -54,16 +54,17 @@ class Client:
                 msg, server_address = self.client_socket_udp.recvfrom(self.client_buffer_size)
                 
                 msg_unpacked = struct.unpack("Ibh", msg)
-            except:
-                print("from run udp recieve client")
+            except:                
                 continue
 
+            time.sleep(1)
             if msg_unpacked[0] == Client.magic_cookie and msg_unpacked[1] == Client.offer:
                 tcp_server_port = msg_unpacked[2]
                 server_ip = server_address[0]
                 keep_alive = False
 
                 self.tcp_connection(server_ip, tcp_server_port)
+                break
                 
 
     def tcp_connection(self, server_ip, tcp_server_port):
@@ -149,6 +150,7 @@ class Client:
                 msg = self.client_socket_tcp.recv(self.client_buffer_size)
                 if msg:
                     self.show_winner(msg)
+                    self.keep_playing = False
                 if not msg:                    
                     self.keep_playing = False
                     
