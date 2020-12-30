@@ -11,6 +11,7 @@ class Server:
         self.server_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         # self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_port_number = 12000
+        self.udp_port = 13117
         self.sever_buffer_size = 1024
         self.clients_connections = {}
         self.client_names = []
@@ -53,7 +54,7 @@ class Server:
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
                                         
-            self.server_socket_udp.sendto(message, ("172.1.255.255", 13117))  
+            self.server_socket_udp.sendto(message, ("172.1.255.255", self.udp_port))  
                                      
            
             time.sleep(1)
