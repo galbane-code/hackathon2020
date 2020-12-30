@@ -15,12 +15,14 @@ class Client:
 
     def __init__(self, name):
         self.name = name
-        self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.udp_port = 13117
+        self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
+        self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       
+        self.udp_port = 13400
         self.client_buffer_size = 1024
         self.first_connection = True
         self.keep_playing = True
+        self.client_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client_socket_udp.bind(('', self.udp_port))
 
     def run_client(self):
         """
@@ -30,9 +32,10 @@ class Client:
         """
         while True:
             self.udp_recv()
+            
             self.client_socket_tcp.close()
-            self.client_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-            self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.client_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)            
+            
 
     def udp_recv(self):
         """
@@ -40,19 +43,19 @@ class Client:
         the client will validate the packet, and will recieve\decline the sender's offer.
         :return:
         """
-        print(colors.yellow + "Client started, listening for offer requests...")
-        self.client_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.client_socket_udp.bind(('', self.udp_port))
-        self.client_socket_udp.settimeout(1)
+        print(colors.yellow + "Client started, listening for offer requests...")          
         self.first_connection = False
 
-        end = time.time() + 10
+        end = time.time() + 5
         keep_alive = True
         while keep_alive and time.time() < end:
             try:
+                
                 msg, server_address = self.client_socket_udp.recvfrom(self.client_buffer_size)
+                
                 msg_unpacked = struct.unpack("Ibh", msg)
             except:
+                print("from run udp recieve client")
                 continue
 
             if msg_unpacked[0] == Client.magic_cookie and msg_unpacked[1] == Client.offer:
@@ -61,8 +64,7 @@ class Client:
                 keep_alive = False
 
                 self.tcp_connection(server_ip, tcp_server_port)
-                self.client_socket_udp.close()
-
+                
 
     def tcp_connection(self, server_ip, tcp_server_port):
         """
@@ -72,14 +74,19 @@ class Client:
         :param tcp_server_port:
         :return:
         """
-        print("client port is {}".format(tcp_server_port))
+        
         print(colors.yellow + "Received offer from {} attempting to connect...​".format(server_ip))
-        self.client_socket_tcp.connect((server_ip, tcp_server_port))
+        try:
+        
+            self.client_socket_tcp.connect((server_ip, tcp_server_port))
 
-        self.client_socket_tcp.send(("{}\n".format(self.name)).encode("utf-8"))
-        msg = self.client_socket_tcp.recv(self.client_buffer_size)
-        self.show_msg(msg)
-        self.play_game()
+            self.client_socket_tcp.send(("{}\n".format(self.name)).encode("utf-8"))
+            msg = self.client_socket_tcp.recv(self.client_buffer_size)
+            self.show_msg(msg)
+            self.play_game()
+        except:
+            # print("problem")
+            return
 
     def show_msg(self, msg):
         """
@@ -118,19 +125,16 @@ class Client:
         Thread(target=self.listen).start()
         
         while self.keep_playing:
-            # with keyboard.Events() as events:
-            #     char = events.get(2)
+            
             try:
                 with Input(keynames='curtsies') as input_generator: 
-                    for msg_char in input_generator:
-                        self.client_socket_tcp.send(msg_char.encode("utf-8"))
+                    char = input_generator.send(0.1)
+                    if char:
+                        self.client_socket_tcp.send(char.encode("utf-8"))
             except:
-                continue
-
-        # with Input(keynames='curtsies') as input_generator: //from Ronit
-        #     for msg_char in input_generator:
-        #         self.client_socket_tcp.send(msg_char.encode("utf-8"))
-
+                # print("from play game")
+                continue         
+        
         self.keep_playing = True
 
         print("Server disconnected, listening for offer requests...")
@@ -141,8 +145,19 @@ class Client:
         :return:
         """
         while True:
-            msg = self.client_socket_tcp.recv(self.client_buffer_size)
-            if msg:
-                # self.show_winner(msg)
-                self.keep_playing = False
-                break
+            try:
+                msg = self.client_socket_tcp.recv(self.client_buffer_size)
+                if msg:
+                    self.show_winner(msg)
+                if not msg:                    
+                    self.keep_playing = False
+                    
+                    break
+            except:
+                # print("from listen")
+                continue
+
+
+if __name__ == "__main__":
+    client = Client("oogie")
+    client.run_client()

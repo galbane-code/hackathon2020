@@ -8,7 +8,8 @@ import colors
 class Server:
     def __init__(self):
         self.server_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        # self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_port_number = 12000
         self.sever_buffer_size = 1024
         self.clients_connections = {}
@@ -19,6 +20,7 @@ class Server:
         self.game_is_on = False
         self.first_connection = True
         self.all_time_players = {}
+        
 
     def run_server(self):
         """
@@ -26,7 +28,6 @@ class Server:
         runs 2 threads, one for UDP packets send, and one for TCP communication with the clients
         :return:
         """
-
         while True:
             t1 = Thread(target=self.send_udp_packet)
             t2 = Thread(target=self.run_tcp_socket)
@@ -36,10 +37,7 @@ class Server:
 
             t1.join()
             t2.join()
-
-            # self.server_socket_tcp.close()
-            self.server_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            
             time.sleep(1)
 
     def send_udp_packet(self):
@@ -48,20 +46,17 @@ class Server:
         packet will contain two verifying msgs and the tcp port number that the server is listening to.
         the server will wait for clients for 10 seconds.
         """
-        finish_time = time.time() + 2
+        finish_time = time.time() + 5
         print(colors.magenta + "Server started, listening on IP address {}".format(socket.gethostbyname(socket.gethostname())))
-        print("client port is {}".format(self.tcp_port_number))
-        self.server_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                
         
-
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
-            try:
-                self.server_socket_udp.sendto(message, ('<broadcast>', 13117))
-                time.sleep(1)
-            except:
-                continue
-        self.server_socket_udp.close()
+                                        
+            self.server_socket_udp.sendto(message, ('<broadcast>', 13400))  
+                                     
+           
+            time.sleep(1)
         print("server's UDP connection timeout")
 
         self.game_is_on = True
@@ -76,8 +71,12 @@ class Server:
         This function connects clients to a TCP socket, gets their names, and splits them into 2 groups
         for the game.
         """
-        self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket_tcp.bind((socket.gethostbyname(socket.gethostname()), self.tcp_port_number))
+        if self.first_connection:
+            
+            self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket_tcp.bind(("", self.tcp_port_number))
+            self.first_connection = False
+            
 
         self.server_socket_tcp.listen()
         self.server_socket_tcp.settimeout(5)
@@ -89,6 +88,7 @@ class Server:
                 bytes_name = connection_socket.recv(self.sever_buffer_size)
             except:
                 break
+
             name = bytes_name.decode("utf-8").split("\n")[0]
             self.client_names.append(name)
             self.clients_connections[client_address[0]] = (connection_socket, name)
@@ -126,7 +126,6 @@ class Server:
         :param msg:
         :return:
         """
-
         print("\n")
         print(colors.winner + msg + colors.reset)
         # for idx, s in enumerate(msg):
@@ -138,18 +137,7 @@ class Server:
         This function starts new Thread to each client playing the game.
         :return:
         """
-        # end_time = time.time() + 2
-        #
-        # while time.time() < end_time:
-        #     for client_name, connection_socket in self.clients_connections.items():
-        #         msg = connection_socket.recv(self.sever_buffer_size)
-        #         msg = msg.decode("utf-8")
-        #
-        #         if client_name in self.group_one:
-        #             self.counter_list[0] += len(msg)
-        #         if client_name in self.group_two:
-        #             self.counter_list[1] += len(msg)
-
+        
         for idx, (client_name, connection_socket) in enumerate(self.clients_connections.items()):
             thread = Thread(target=self.update_counter, args=(client_name, connection_socket[0]))
             thread.start()
@@ -185,6 +173,7 @@ class Server:
         when done, the server goes back to "send udp packets" mode.
         :return:
         """
+        
         count_1 = self.counter_list[0]
         count_2 = self.counter_list[1]
 
@@ -207,10 +196,15 @@ class Server:
             self.all_time_players[ip][0] += 1
 
         msg += "\nGame over, sending out offer requests..."
-
+        
         self.send_to_all_clients(msg)
-        self.show_winner(msg)
+        self.disconnect_all_clients()
+        # self.show_winner(msg)
         self.show_top_5()
+    
+    def disconnect_all_clients(self):
+        for conn in self.clients_connections.values():
+            conn[0].close()
 
 
     def send_to_all_clients(self, msg):
@@ -226,9 +220,8 @@ class Server:
         """
         resets server's settings.
         """
-        for connection_socket in self.clients_connections.values():
-            connection_socket[0].close()
-
+        # for connection_socket in self.clients_connections.values():
+        
         self.tcp_port_number = 12000
         self.sever_buffer_size = 1024
         self.clients_connections = {}
@@ -238,8 +231,7 @@ class Server:
         self.counter_list = [0, 0]
         self.game_is_on = False
 
-        self.server_socket_tcp.close()
-
+        
     def show_top_5(self):
         if len(self.all_time_players) == 0:
             return
@@ -256,3 +248,6 @@ class Server:
                       .format(idx+1, key, value[0], value[1]) + colors.reset)
         print(colors.green + "===========================================\n\n" + colors.reset)
 
+if __name__ == "__main__":
+    server = Server()
+    server.run_server()
