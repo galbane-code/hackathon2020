@@ -15,7 +15,8 @@ class Server:
         self.tcp_port_number = 12000
         self.udp_port = 13117
         self.server_ip = get_if_addr(Server.SUBNET_NAME)
-        print(self.server_ip)
+        self.udp_broad = "172.1.255.255"
+        
         self.sever_buffer_size = 1024
         self.clients_connections = {}
         self.client_names = []
@@ -58,7 +59,7 @@ class Server:
         while time.time() < finish_time:
             message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
                                         
-            self.server_socket_udp.sendto(message, (self.server_ip, self.udp_port))  
+            self.server_socket_udp.sendto(message, (self.udp_broad, self.udp_port))  
                                      
            
             time.sleep(1)
@@ -79,7 +80,7 @@ class Server:
         if self.first_connection:
             
             self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.server_socket_tcp.bind(("", self.tcp_port_number))
+            self.server_socket_tcp.bind((self.server_ip, self.tcp_port_number))
             self.first_connection = False
             
 
