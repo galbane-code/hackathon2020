@@ -3,7 +3,7 @@ import socket
 import struct
 import time
 from threading import Thread
-import getch
+
 import colors
 from curtsies import Input
 # import curses

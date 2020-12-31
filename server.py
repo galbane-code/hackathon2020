@@ -3,15 +3,19 @@ import struct
 import time
 from threading import Thread
 import colors
+from scapy.arch import get_if_addr
 
 
 class Server:
+    SUBNET_NAME = 'eth1'
     def __init__(self):
         self.server_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.server_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         # self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_port_number = 12000
         self.udp_port = 13117
+        self.server_ip = get_if_addr(Server.SUBNET)
+        print(self.server_ip)
         self.sever_buffer_size = 1024
         self.clients_connections = {}
         self.client_names = []
