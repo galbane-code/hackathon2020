@@ -6,7 +6,6 @@ from threading import Thread
 
 import colors
 from curtsies import Input
-# import curses
 
 
 class Client:
@@ -49,10 +48,8 @@ class Client:
         end = time.time() + 10
         keep_alive = True
         while keep_alive and time.time() < end:
-            try:
-                
-                msg, server_address = self.client_socket_udp.recvfrom(self.client_buffer_size)
-                
+            try:                
+                msg, server_address = self.client_socket_udp.recvfrom(self.client_buffer_size)                
                 msg_unpacked = struct.unpack("Ibh", msg)
             except:                
                 continue
@@ -61,6 +58,7 @@ class Client:
             if msg_unpacked[0] == Client.magic_cookie and msg_unpacked[1] == Client.offer:
                 tcp_server_port = msg_unpacked[2]
                 server_ip = server_address[0]
+                print(server_ip)
                 keep_alive = False
 
                 self.tcp_connection(server_ip, tcp_server_port)
@@ -77,10 +75,8 @@ class Client:
         """
         
         print(colors.yellow + "Received offer from {} attempting to connect...​".format(server_ip))
-        try:
-        
+        try:        
             self.client_socket_tcp.connect((server_ip, tcp_server_port))
-
             self.client_socket_tcp.send(("{}\n".format(self.name)).encode("utf-8"))
             msg = self.client_socket_tcp.recv(self.client_buffer_size)
             self.show_msg(msg)

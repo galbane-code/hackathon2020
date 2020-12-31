@@ -7,6 +7,9 @@ from scapy.arch import get_if_addr
 
 
 class Server:
+    """KeyBoard Spam Game Server!!!
+        bonuses: colored printing and the top 5 players of the server statistics.
+    """
     SUBNET_NAME = 'eth1'
     def __init__(self):
         self.server_socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -53,15 +56,11 @@ class Server:
         the server will wait for clients for 10 seconds.
         """
         finish_time = time.time() + 10
-        print(colors.magenta + "Server started, listening on IP address {}".format(socket.gethostbyname(socket.gethostname())))
-                
+        print(colors.magenta + "Server started, listening on IP address {}".format(socket.gethostbyname(socket.gethostname())))               
         
         while time.time() < finish_time:
-            message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)
-                                        
-            self.server_socket_udp.sendto(message, (self.udp_broad, self.udp_port))  
-                                     
-           
+            message = struct.pack('Ibh', 0xfeedbeef, 0x2, self.tcp_port_number)                                        
+            self.server_socket_udp.sendto(message, (self.udp_broad, self.udp_port))                                     
             time.sleep(1)
         print("server's UDP connection timeout")
 
@@ -77,12 +76,10 @@ class Server:
         This function connects clients to a TCP socket, gets their names, and splits them into 2 groups
         for the game.
         """
-        if self.first_connection:
-            
+        if self.first_connection:            
             self.server_socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server_socket_tcp.bind((self.server_ip, self.tcp_port_number))
-            self.first_connection = False
-            
+            self.first_connection = False            
 
         self.server_socket_tcp.listen()
         self.server_socket_tcp.settimeout(5)
@@ -126,18 +123,7 @@ class Server:
         msg += "Start pressing keys on your keyboard as fast as you can!!\n"
         self.send_to_all_clients(msg)
 
-    def show_winner(self, msg):
-        """
-        prints msgs from sender to the screen
-        :param msg:
-        :return:
-        """
-        print("\n")
-        print(colors.winner + msg + colors.reset)
-        # for idx, s in enumerate(msg):
-        #     if s != "":
-        #         print(colors.winner + s + colors.reset)
-
+    
     def start_game(self):
         """
         This function starts new Thread to each client playing the game.
@@ -205,7 +191,7 @@ class Server:
         
         self.send_to_all_clients(msg)
         self.disconnect_all_clients()
-        # self.show_winner(msg)
+      
         self.show_top_5()
     
     def disconnect_all_clients(self):
